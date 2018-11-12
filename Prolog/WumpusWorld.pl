@@ -133,9 +133,91 @@ tileType(X, Y, Type) :-
 %*********************PLAYER************************************************
 
 %playerAt(State, X, Y)
-%playerAt()
+playerAt(0, 0, 0).
 
-%*********************end: PLAYER************************************************
+%se player não se moveu no último estado, sua posição é a mesma
+playerAt(State, X, Y) :- 
+	n_constant(N),
+	previousState(State, PreviousState),
+	playerAt(PreviousState, PX, PY),
+	playerDeltaMov(PreviousState, DX, DY),
+	NX is PX + DX, NY is PY + DY,
+	((NX >= 0, NX < N, NY >= 0, NY < N) -> (X is NX, Y is NY) ; (X is PX, Y is PY)).
+	
+%se não encaixou no último, tentou andar pra out of bounds	
+playerAt(State, X, Y) :-
+	n_constant(N),
+	previousState(State, PreviousState),
+	playerAt(PreviousState, PX, PY),
+	playerDeltaMov(PreviousState, DX, DY),
+	NX is PX + DX, NY is PY + DY,
+	(NX < 0 ; NX >= N; NY < 0; NY >= N), X is PX, Y is PY.
+	
+%playerMoveForward(State) : só diz se player se moveu naquele estado
 
+%set to dynamic
+playerMoveForward(-1).
+playerMoveForward(0).
+playerMoveForward(1).
+playerMoveForward(2).
+playerMoveForward(_).
+
+playerDeltaMov(State, X, Y) :-
+	playerMoveForward(State),
+	playerFacing(State, Direction),
+	Direction == right,
+	X = 1, Y = 0.
 	
+playerDeltaMov(State, X, Y) :-
+	playerMoveForward(State),
+	playerFacing(State, Direction),
+	Direction == left,
+	X = -1, Y = 0.
 	
+playerDeltaMov(State, X, Y) :-
+	playerMoveForward(State),
+	playerFacing(State, Direction),
+	Direction == up,
+	X = 0, Y = 1.
+	
+playerDeltaMov(State, X, Y) :-
+	playerMoveForward(State),
+	playerFacing(State, Direction),
+	Direction == down,
+	X = 0, Y = -1.
+
+playerDeltaMov(State, X, Y) :-
+	\+ playerMoveForward(State),
+	X = 0, Y = 0.
+	
+
+%playerFacing(State, direction). direction = left, right, up, down
+playerFacing(State,Direction) :-
+	playerRotation(State, Counter),
+	Mod is Counter mod 4 , !,
+	%um switch, basicamente
+	(Mod =:= 0 -> Direction = right ;
+	Mod =:= 1 -> Direction = up ;
+	Mod =:= 2 -> Direction = left ; 
+	Mod =:= 3 -> Direction = down ;
+	fail).
+
+
+%contador de verdade pra manter qual a rotação do player. 
+%Depois calculo qual a direção que ele está olhando mesmo baseado nesse contador e no operador mod
+%defino 0 como olhando para a direita
+playerRotation(0, 0).
+
+playerRotation(State, Counter) :-
+	previousState(State, PreviousState),
+	playerRotation(PreviousState, PreviousCounter),
+	playerTurn(PreviousState, Increment),
+	Counter is PreviousCounter + Increment.
+	
+%playerTurn: diz se o player virou para a esquerda(+1) ou direita(-1) no estado State
+%por default, é 0(não virou)
+playerTurn(_, 0).
+
+%playerAt(1, X, Y).
+
+%********************end: PLAYER************************************************

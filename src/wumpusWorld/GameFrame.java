@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.Polygon;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -70,6 +71,7 @@ public class GameFrame extends JFrame{
 		
 		//atualiza display
 		gp.UpdateGamePanel(nextGameInfo);
+		bp.UpdateBoardPanel(nextGameInfo);
 		
 	}
 
@@ -153,27 +155,62 @@ class BoardPanel extends JPanel
 	
 	public void paint(Graphics g)
 	{
-		//desenha um grid vazio
+		//desenha o grid
 		for(int i = 0; i < gi.N; i++)
 		{
 			for(int j = 0; j < gi.N; j++)
 			{			
+				//uso (gi.N - j - 1) pq o eixo Y do swing começa em cima
 				g.setColor(Color.BLACK);
-				g.drawRect(tileSize * i, tileSize * j, tileSize, tileSize);
+				g.drawRect(tileSize * i, tileSize * (gi.N - j - 1), tileSize, tileSize);
 				g.setColor(Color.LIGHT_GRAY);
-				g.fillRect(tileSize * i, tileSize * j, tileSize-1, tileSize-1);
+				g.fillRect(tileSize * i, tileSize * (gi.N - j - 1), tileSize-1, tileSize-1);
 				
 				//dependendo do que estiver na casa, desenha essas coisas
 				if(gi.tiles[i][j] == TileType.pit)
 				{
 					//desenha pit
 					g.setColor(Color.BLACK);
-					g.fillOval(tileSize * i, tileSize * j, tileSize, tileSize);
+					g.fillOval(tileSize * i, tileSize * (gi.N - j - 1), tileSize, tileSize);
 				}
-				
 			}
 		}
 		
+		//desenha o player
+		//um triangulo isósceles
+		int[] y = new int[3];
+		int[] x = new int[3];
+		switch(gi.playerDirection)
+		{
+			case up:
+				y[0] = 0; y[1] = tileSize; y[2] = tileSize;
+				x[0] = tileSize / 2; x[1] = tileSize / 4; x[2] = 3*tileSize/4;
+				break;
+			case down:
+				y[0] = tileSize; y[1] = 0; y[2] = 0;
+				x[0] = tileSize / 2; x[1] = tileSize / 4; x[2] = 3*tileSize/4;
+				break;
+			case right:
+				y[0] = tileSize / 2; y[1] = tileSize / 4; y[2] = 3*tileSize/4;
+				x[0] = tileSize; x[1] = 0; x[2] = 0;
+				break;
+			case left:
+				y[0] = tileSize / 2; y[1] = tileSize / 4; y[2] = 3*tileSize/4;
+				x[0] = 0; x[1] = tileSize; x[2] = tileSize;
+			default:
+				System.out.println("invalid gi.playerDirection");
+		}
+		
+		//incrementa posição do tile em que o player está
+		int incX = gi.playerX * tileSize;
+		int incY = (gi.N - gi.playerY - 1) * tileSize;
+		
+		x[0] += incX; x[1] += incX; x[2] += incX;
+		y[0] += incY; y[1] += incY; y[2] += incY;
+		
+		Polygon p = new Polygon(x,y,3);
+		g.setColor(Color.RED);
+		g.fillPolygon(p);
 	}
 	
 	BoardPanel(GameInfo gameInfo)
@@ -183,5 +220,11 @@ class BoardPanel extends JPanel
 		//pega infos e monta tabuleiro
 		this.setPreferredSize(new Dimension(gi.N * tileSize, gi.N * tileSize));
 		
+	}
+	
+	void UpdateBoardPanel(GameInfo gameInfo)
+	{
+		this.gi = gameInfo;
+		repaint();
 	}
 }

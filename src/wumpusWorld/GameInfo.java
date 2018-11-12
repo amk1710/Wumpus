@@ -23,6 +23,12 @@ public class GameInfo {
 	public TileType[][] tiles;
 	public int N; 
 	
+	//posição do player
+	int playerX;
+	int playerY;
+	Direction playerDirection;
+	
+	
 	//supoe que já está aberta a consulta ao arquivo WumpusWorld.pl
 	public GameInfo(int state) {
 
@@ -71,7 +77,27 @@ public class GameInfo {
 	    	}
 	    }
 	    
+	    //posição do player
+	    Query q6 = new Query("playerAt", new Term[] {new org.jpl7.Integer(state), new Variable("X"),new Variable("Y") });
+	    if(q6.hasNext())
+	    {
+	    	Map binding = q6.next();
+	    	Term t1 = (Term) binding.get("X");
+	    	Term t2 = (Term) binding.get("Y");
+	    	playerX = t1.intValue();
+	    	playerY = t2.intValue();
+	    }
+	    q6.close();
 	    
+	    //orientação do player
+	    Query q7 = new Query("playerFacing", new Term[] {new org.jpl7.Integer(state), new Variable("X")});
+	    if(q7.hasNext())
+	    {
+	    	Map binding = q7.next();
+	    	Term t1 = (Term) binding.get("X");
+	    	playerDirection = Direction.valueOf(t1.name());
+	    }
+	    q7.close();
 	    
 	    
 		
